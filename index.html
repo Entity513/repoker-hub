@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Re:Poker DATABASE | Entity</title>
+<style>
+  :root {
+    --bg: #0A0806;
+    --bg2: #12100D;
+    --bg3: #1A1714;
+    --text: #F0EDE6;
+    --muted: #B8B3A8;
+    --gold: #E8C547;
+    --green: #47E8A0;
+    --blue: #47A0E8;
+    --orange: #E87047;
+    --red: #E84747;
+    --purple: #A047E8;
+    --card-border: rgba(255,255,255,0.08);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { background:var(--bg); color:var(--text); font-family:'Hiragino Kaku Gothic Pro','Yu Gothic',sans-serif; line-height:1.6; min-height:100vh; }
+
+  /* HERO */
+  .hero {
+    background:
+      radial-gradient(ellipse at 15% 50%, rgba(232,197,71,.08) 0%, transparent 55%),
+      radial-gradient(ellipse at 85% 50%, rgba(71,160,232,.06) 0%, transparent 55%),
+      linear-gradient(180deg, #1C1510 0%, var(--bg) 100%);
+    padding: 64px 24px 48px;
+    text-align: center;
+    border-bottom: 1px solid rgba(232,197,71,.12);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '♠ ♥ ♦ ♣';
+    position: absolute;
+    top: 18px; left: 50%; transform: translateX(-50%);
+    font-size: 20px; letter-spacing: 20px;
+    color: rgba(232,197,71,.12); white-space: nowrap;
+  }
+  .hero-badge {
+    display: inline-block;
+    border: 1px solid rgba(232,197,71,.4);
+    color: var(--gold); font-size: 10px;
+    letter-spacing: 4px; padding: 4px 16px;
+    margin-bottom: 20px; text-transform: uppercase;
+  }
+  .hero h1 { font-size: clamp(32px,7vw,60px); font-weight: 900; letter-spacing: -1px; }
+  .hero h1 em { color: var(--gold); font-style: normal; }
+  .hero-sub { margin-top: 10px; color: var(--muted); font-size: 13px; letter-spacing: 2px; }
+  .hero-meta {
+    display: inline-flex; gap: 24px; margin-top: 24px;
+    padding: 10px 28px; background: rgba(255,255,255,.03);
+    border: 1px solid var(--card-border); font-size: 12px; color: var(--muted);
+  }
+  .hero-meta span { display: flex; align-items: center; gap: 6px; }
+  .hero-meta strong { color: var(--gold); }
+
+  /* CATEGORIES */
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  .cat-label {
+    font-size: 11px; letter-spacing: 3px; color: var(--muted);
+    text-transform: uppercase; margin: 48px 0 20px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .cat-label::after { content:''; flex:1; height:1px; background:var(--card-border); }
+
+  /* CARDS GRID */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; margin-bottom: 16px; }
+  .grid-wide { grid-template-columns: 1fr; }
+
+  .card {
+    background: var(--bg3); border: 1px solid var(--card-border);
+    padding: 24px 26px; text-decoration: none; color: var(--text);
+    display: block; position: relative; overflow: hidden;
+    transition: border-color .2s, transform .15s;
+  }
+  .card:hover { transform: translateY(-2px); }
+  .card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+
+  .card.gold::before   { background: var(--gold); }
+  .card.green::before  { background: var(--green); }
+  .card.blue::before   { background: var(--blue); }
+  .card.orange::before { background: var(--orange); }
+  .card.purple::before { background: var(--purple); }
+  .card.red::before    { background: var(--red); }
+
+  .card:hover.gold   { border-color: rgba(232,197,71,.3); }
+  .card:hover.green  { border-color: rgba(71,232,160,.3); }
+  .card:hover.blue   { border-color: rgba(71,160,232,.3); }
+  .card:hover.orange { border-color: rgba(232,112,71,.3); }
+  .card:hover.purple { border-color: rgba(160,71,232,.3); }
+  .card:hover.red    { border-color: rgba(232,71,71,.3); }
+
+  .card-icon { font-size: 28px; margin-bottom: 14px; display: block; }
+  .card-title { font-size: 18px; font-weight: 800; margin-bottom: 6px; }
+  .card-desc { font-size: 13px; color: var(--muted); line-height: 1.65; margin-bottom: 16px; }
+  .card-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag {
+    font-size: 10px; padding: 2px 8px;
+    border: 1px solid rgba(255,255,255,.08);
+    color: var(--muted); border-radius: 10px;
+  }
+  .card-arrow {
+    position: absolute; right: 22px; top: 50%; transform: translateY(-50%);
+    font-size: 18px; color: rgba(255,255,255,.15);
+    transition: color .2s, right .2s;
+  }
+  .card:hover .card-arrow { color: rgba(255,255,255,.4); right: 18px; }
+
+  /* EXTERNAL LINKS section */
+  .ext-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+  .ext-card {
+    background: var(--bg3); border: 1px solid var(--card-border);
+    padding: 16px 20px; text-decoration: none; color: var(--text);
+    display: flex; align-items: center; gap: 14px;
+    transition: background .2s;
+  }
+  .ext-card:hover { background: rgba(255,255,255,.04); }
+  .ext-icon { font-size: 22px; flex-shrink: 0; }
+  .ext-body { flex: 1; min-width: 0; }
+  .ext-title { font-size: 14px; font-weight: 700; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ext-url { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ext-badge {
+    font-size: 9px; padding: 2px 6px; border-radius: 2px;
+    background: rgba(71,232,160,.12); color: var(--green);
+    flex-shrink: 0; font-weight: 700; letter-spacing: 1px;
+  }
+
+  /* FOOTER */
+  .footer {
+    text-align: center; padding: 48px 24px; color: rgba(255,255,255,.15);
+    font-size: 11px; letter-spacing: 2px; border-top: 1px solid var(--card-border);
+    margin-top: 64px;
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">Intelligence Database</div>
+  <h1>Re:<em>Poker</em> DATABASE</h1>
+  <div class="hero-sub">POWERED BY ENTITY — INTERNAL USE ONLY</div>
+  <div class="hero-meta">
+    <span>🗓 <strong>2026.03〜</strong> 稼働データ</span>
+    <span>📄 <strong>8</strong> ドキュメント</span>
+    <span>🏪 <strong>4</strong> 店舗データ</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- ANALYTICS -->
+  <div class="cat-label">📊 Analytics — データ・分析</div>
+  <div class="grid">
+    <a class="card gold" href="https://entity513.github.io/repoker-ops-log/" target="_blank">
+      <span class="card-icon">♠</span>
+      <div class="card-title">競合店舗 稼働ログ</div>
+      <div class="card-desc">Re:Poker / ATLAS / Las Vegas / Poker Spot White の4店舗リング・トーナメント稼働データ比較。2026.03.01〜04.08</div>
+      <div class="card-tags">
+        <span class="tag">4店舗比較</span>
+        <span class="tag">リングログ</span>
+        <span class="tag">トナメログ</span>
+        <span class="tag">インサイト</span>
+      </div>
+      <span class="card-arrow">→</span>
+    </a>
+    <a class="card green" href="https://entity513.github.io/repoker-march-review/" target="_blank">
+      <span class="card-icon">📊</span>
+      <div class="card-title">3月 Re:Poker 振り返り</div>
+      <div class="card-desc">2026年3月グランドオープン月の全体振り返りレポート。集客・稼働・イベント成果を総括</div>
+      <div class="card-tags">
+        <span class="tag">3月レポート</span>
+        <span class="tag">グランドオープン</span>
+        <span class="tag">振り返り</span>
+      </div>
+      <span class="card-arrow">→</span>
+    </a>
+    <a class="card blue" href="https://entity513.github.io/repoker-x-automation/" target="_blank">
+      <span class="card-icon">🤖</span>
+      <div class="card-title">X自動化 報告書</div>
+      <div class="card-desc">OpenClaw Entityによる X（Twitter）自動化システムの導入・運用報告。投稿実績・エンゲージメント分析</div>
+      <div class="card-tags">
+        <span class="tag">X運用</span>
+        <span class="tag">自動化</span>
+        <span class="tag">Entity</span>
+      </div>
+      <span class="card-arrow">→</span>
+    </a>
+  </div>
+
+  <!-- STRATEGY -->
+  <div class="cat-label">🎯 Strategy — 戦略・マニュアル</div>
+  <div class="ext-grid">
+    <a class="ext-card" href="https://stellar-crumble-b58b85.netlify.app/" target="_blank">
+      <span class="ext-icon">🎯</span>
+      <div class="ext-body">
+        <div class="ext-title">マーケティング戦略</div>
+        <div class="ext-url">stellar-crumble-b58b85.netlify.app</div>
+      </div>
+      <span class="ext-badge">NETLIFY</span>
+    </a>
+    <a class="ext-card" href="https://jocular-strudel-733a53.netlify.app/" target="_blank">
+      <span class="ext-icon">𝕏</span>
+      <div class="ext-body">
+        <div class="ext-title">公式X 運用マニュアル</div>
+        <div class="ext-url">jocular-strudel-733a53.netlify.app</div>
+      </div>
+      <span class="ext-badge">NETLIFY</span>
+    </a>
+    <a class="ext-card" href="https://jovial-swan-1fe19b.netlify.app/" target="_blank">
+      <span class="ext-icon">👑</span>
+      <div class="ext-body">
+        <div class="ext-title">りい個人X 運用マニュアル</div>
+        <div class="ext-url">jovial-swan-1fe19b.netlify.app</div>
+      </div>
+      <span class="ext-badge">NETLIFY</span>
+    </a>
+    <a class="ext-card" href="https://luminous-gingersnap-b74726.netlify.app/" target="_blank">
+      <span class="ext-icon">🆕</span>
+      <div class="ext-body">
+        <div class="ext-title">新コンセプト マニュアル</div>
+        <div class="ext-url">luminous-gingersnap-b74726.netlify.app</div>
+      </div>
+      <span class="ext-badge">NETLIFY</span>
+    </a>
+    <a class="ext-card" href="https://chimerical-cactus-86c194.netlify.app/" target="_blank">
+      <span class="ext-icon">📖</span>
+      <div class="ext-body">
+        <div class="ext-title">新キャスト バイブル</div>
+        <div class="ext-url">chimerical-cactus-86c194.netlify.app</div>
+      </div>
+      <span class="ext-badge">NETLIFY</span>
+    </a>
+    <a class="ext-card" href="https://repoker-point-ranking-entity.netlify.app/" target="_blank">
+      <span class="ext-icon">🏆</span>
+      <div class="ext-body">
+        <div class="ext-title">ポイントランキング 競合比較</div>
+        <div class="ext-url">repoker-point-ranking-entity.netlify.app</div>
+      </div>
+      <span class="ext-badge">NETLIFY</span>
+    </a>
+  </div>
+
+</div>
+
+<div class="footer">
+  ♠ Re:Poker DATABASE — ENTITY INTELLIGENCE SYSTEM ♠<br>
+  <span style="color:rgba(255,255,255,.08)">Internal Use Only — 2026</span>
+</div>
+
+</body>
+</html>
