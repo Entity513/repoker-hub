@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Re:Poker DATABASE | Entity</title>
+<style>
+  :root {
+    --bg:    #090806;
+    --bg2:   #111009;
+    --bg3:   #181510;
+    --bg4:   #1E1A14;
+    --text:  #F0EDE6;
+    --muted: #8A857C;
+    --muted2:#B8B3A8;
+    --gold:  #E8C547;
+    --green: #47E8A0;
+    --blue:  #47A0E8;
+    --orange:#E87047;
+    --red:   #E84747;
+    --purple:#A047E8;
+    --border: rgba(255,255,255,0.06);
+    --border2:rgba(255,255,255,0.10);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pro','Yu Gothic',sans-serif;line-height:1.6;min-height:100vh;}
+
+  /* ── NAV ── */
+  .nav{
+    position:sticky;top:0;z-index:100;
+    background:rgba(9,8,6,.88);backdrop-filter:blur(16px);
+    border-bottom:1px solid var(--border);
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 32px;
+  }
+  .nav-logo{font-size:13px;font-weight:900;letter-spacing:2px;color:var(--gold);padding:16px 0;white-space:nowrap;}
+  .nav-logo span{color:var(--muted);}
+  .nav-links{display:flex;gap:0;overflow-x:auto;}
+  .nav-links a{
+    padding:16px 18px;font-size:11px;letter-spacing:1.5px;
+    color:var(--muted);text-decoration:none;white-space:nowrap;
+    transition:color .2s;border-bottom:2px solid transparent;
+  }
+  .nav-links a:hover{color:var(--gold);border-bottom-color:rgba(232,197,71,.3);}
+  @media(max-width:640px){.nav{padding:0 16px;}.nav-logo{font-size:11px;}}
+
+  /* ── HERO ── */
+  .hero{
+    position:relative;overflow:hidden;
+    padding:80px 32px 64px;text-align:center;
+    border-bottom:1px solid var(--border);
+  }
+  .hero-bg{
+    position:absolute;inset:0;
+    background:
+      radial-gradient(ellipse 60% 60% at 15% 50%, rgba(232,197,71,.09) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 50% at 85% 30%, rgba(71,160,232,.06) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 80% at 50% 100%, rgba(71,232,160,.04) 0%, transparent 70%),
+      linear-gradient(180deg,#1A1408 0%,var(--bg) 100%);
+  }
+  .hero-suits{
+    position:absolute;top:0;left:50%;transform:translateX(-50%);
+    font-size:12px;letter-spacing:28px;color:rgba(232,197,71,.08);
+    padding-top:20px;white-space:nowrap;
+  }
+  .hero-content{position:relative;z-index:1;}
+  .hero-eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    border:1px solid rgba(232,197,71,.3);
+    color:var(--gold);font-size:9px;letter-spacing:4px;
+    padding:5px 18px;margin-bottom:24px;text-transform:uppercase;
+  }
+  .hero-eyebrow::before{content:'●';font-size:6px;animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+  .hero h1{font-size:clamp(36px,7vw,68px);font-weight:900;letter-spacing:-2px;line-height:1;}
+  .hero h1 em{color:var(--gold);font-style:normal;}
+  .hero-sub{margin-top:12px;color:var(--muted);font-size:12px;letter-spacing:3px;text-transform:uppercase;}
+
+  .hero-stats{
+    display:inline-flex;flex-wrap:wrap;justify-content:center;gap:0;
+    margin-top:36px;border:1px solid var(--border2);
+    background:rgba(255,255,255,.02);
+  }
+  .hero-stat{
+    padding:14px 28px;display:flex;flex-direction:column;align-items:center;
+    border-right:1px solid var(--border);
+  }
+  .hero-stat:last-child{border-right:none;}
+  .hero-stat-val{font-size:20px;font-weight:900;color:var(--gold);line-height:1;}
+  .hero-stat-label{font-size:10px;color:var(--muted);letter-spacing:1px;margin-top:4px;}
+  @media(max-width:600px){
+    .hero-stat{padding:12px 16px;}
+    .hero-stat-val{font-size:16px;}
+  }
+
+  /* ── CONTAINER ── */
+  .container{max-width:1160px;margin:0 auto;padding:0 32px 80px;}
+  @media(max-width:640px){.container{padding:0 16px 60px;}}
+
+  /* ── SECTION HEADER ── */
+  .sec{padding-top:64px;}
+  .sec-head{
+    display:flex;align-items:center;gap:16px;
+    margin-bottom:24px;
+  }
+  .sec-num{
+    font-size:11px;font-weight:900;color:var(--gold);
+    letter-spacing:1px;opacity:.5;min-width:28px;
+  }
+  .sec-title{font-size:13px;font-weight:700;letter-spacing:3px;color:var(--muted2);text-transform:uppercase;}
+  .sec-line{flex:1;height:1px;background:var(--border);}
+  .sec-count{
+    font-size:10px;padding:2px 8px;
+    background:rgba(232,197,71,.08);border:1px solid rgba(232,197,71,.15);
+    color:var(--gold);letter-spacing:1px;
+  }
+
+  /* ── MONTHLY TIMELINE ── */
+  .timeline{display:flex;flex-direction:column;gap:12px;}
+  .tl-card{
+    display:grid;grid-template-columns:80px 1fr auto;align-items:center;gap:0;
+    background:var(--bg3);border:1px solid var(--border);
+    text-decoration:none;color:var(--text);
+    position:relative;overflow:hidden;
+    transition:border-color .2s,background .2s;
+  }
+  .tl-card:hover{background:var(--bg4);border-color:var(--border2);}
+  .tl-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;}
+  .tl-card.c-green::before{background:var(--green);}
+  .tl-card.c-orange::before{background:var(--orange);}
+  .tl-card.c-blue::before{background:var(--blue);}
+  .tl-card.c-purple::before{background:var(--purple);}
+
+  .tl-month{
+    padding:24px 20px 24px 28px;text-align:center;
+    border-right:1px solid var(--border);
+  }
+  .tl-month-num{font-size:32px;font-weight:900;line-height:1;}
+  .tl-month-label{font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:2px;}
+  .tl-card.c-green  .tl-month-num{color:var(--green);}
+  .tl-card.c-orange .tl-month-num{color:var(--orange);}
+  .tl-card.c-blue   .tl-month-num{color:var(--blue);}
+  .tl-card.c-purple .tl-month-num{color:var(--purple);}
+
+  .tl-body{padding:20px 24px;}
+  .tl-title{font-size:16px;font-weight:800;margin-bottom:6px;}
+  .tl-desc{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px;}
+  .tl-tags{display:flex;flex-wrap:wrap;gap:6px;}
+  .tl-tag{font-size:9px;padding:2px 8px;border:1px solid var(--border2);color:var(--muted);border-radius:10px;letter-spacing:.5px;}
+
+  .tl-arrow{
+    padding:24px;font-size:14px;color:var(--muted);
+    transition:color .2s,padding-right .2s;
+  }
+  .tl-card:hover .tl-arrow{color:var(--text);padding-right:18px;}
+
+  @media(max-width:600px){
+    .tl-card{grid-template-columns:60px 1fr auto;}
+    .tl-month{padding:16px 12px 16px 18px;}
+    .tl-month-num{font-size:24px;}
+    .tl-body{padding:14px 16px;}
+    .tl-title{font-size:14px;}
+  }
+
+  /* ── ANALYTICS CARDS ── */
+  .a-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
+  .a-card{
+    background:var(--bg3);border:1px solid var(--border);
+    padding:28px;text-decoration:none;color:var(--text);
+    position:relative;overflow:hidden;
+    transition:border-color .2s,transform .15s;
+    display:flex;flex-direction:column;gap:12px;
+  }
+  .a-card:hover{transform:translateY(-3px);}
+  .a-card::after{
+    content:'';position:absolute;
+    top:0;left:0;right:0;height:2px;
+  }
+  .a-card.c-gold::after  {background:var(--gold);}
+  .a-card.c-blue::after  {background:var(--blue);}
+  .a-card.c-green::after {background:var(--green);}
+  .a-card:hover.c-gold  {border-color:rgba(232,197,71,.25);}
+  .a-card:hover.c-blue  {border-color:rgba(71,160,232,.25);}
+  .a-card:hover.c-green {border-color:rgba(71,232,160,.25);}
+
+  .a-card-icon{font-size:32px;}
+  .a-card-title{font-size:17px;font-weight:800;}
+  .a-card-desc{font-size:12px;color:var(--muted);line-height:1.7;flex:1;}
+  .a-card-tags{display:flex;flex-wrap:wrap;gap:6px;}
+  .a-card-arr{
+    align-self:flex-end;font-size:13px;color:var(--muted);
+    transition:color .2s,transform .2s;
+  }
+  .a-card:hover .a-card-arr{color:var(--text);transform:translateX(4px);}
+
+  /* ── MANUAL GRID ── */
+  .m-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;}
+  .m-card{
+    background:var(--bg3);border:1px solid var(--border);
+    padding:18px 20px;text-decoration:none;color:var(--text);
+    display:flex;align-items:center;gap:14px;
+    transition:background .2s,border-color .2s;
+  }
+  .m-card:hover{background:var(--bg4);border-color:var(--border2);}
+  .m-icon{font-size:24px;flex-shrink:0;width:36px;text-align:center;}
+  .m-body{flex:1;min-width:0;}
+  .m-title{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .m-cat{font-size:10px;color:var(--muted);letter-spacing:1px;margin-top:2px;}
+  .m-badge{
+    font-size:9px;padding:2px 6px;
+    background:rgba(71,232,160,.1);border:1px solid rgba(71,232,160,.2);
+    color:var(--green);flex-shrink:0;letter-spacing:1px;font-weight:700;
+  }
+  .m-badge.org{background:rgba(71,160,232,.1);border-color:rgba(71,160,232,.2);color:var(--blue);}
+
+  /* ── FOOTER ── */
+  .footer{
+    text-align:center;padding:48px 32px;
+    border-top:1px solid var(--border);
+    color:rgba(255,255,255,.12);font-size:10px;letter-spacing:2px;
+  }
+  .footer-logo{font-size:18px;font-weight:900;color:rgba(232,197,71,.2);letter-spacing:-1px;margin-bottom:10px;}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-logo">Re:Poker <span>DATABASE</span></div>
+  <div class="nav-links">
+    <a href="#monthly">📅 月次レポート</a>
+    <a href="#minutes">📋 社員MTG</a>
+    <a href="#analytics">📊 分析</a>
+    <a href="#strategy">🎯 戦略</a>
+    <a href="#org">🏢 組織</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-suits">♠ ♥ ♦ ♣</div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">Intelligence Database</div>
+    <h1>Re:<em>Poker</em><br>DATABASE</h1>
+    <div class="hero-sub">Powered by Entity — Internal Use Only</div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-val">2026.03</div>
+        <div class="hero-stat-label">稼働開始</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val">14</div>
+        <div class="hero-stat-label">ドキュメント</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val">4ヶ月</div>
+        <div class="hero-stat-label">レポート蓄積</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val">4店舗</div>
+        <div class="hero-stat-label">競合データ</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- MONTHLY REPORTS -->
+  <div class="sec" id="monthly">
+    <div class="sec-head">
+      <span class="sec-num">01</span>
+      <span class="sec-title">Monthly Report — 月次収支レポート</span>
+      <div class="sec-line"></div>
+      <span class="sec-count">4 DOCS</span>
+    </div>
+    <div class="timeline">
+
+      <a class="tl-card c-green" href="https://entity513.github.io/repoker-march-review/" target="_blank">
+        <div class="tl-month">
+          <div class="tl-month-num">03</div>
+          <div class="tl-month-label">MARCH</div>
+        </div>
+        <div class="tl-body">
+          <div class="tl-title">3月 振り返りレポート</div>
+          <div class="tl-desc">グランドオープン月の全体振り返り。集客・稼働・イベント成果を総括。</div>
+          <div class="tl-tags">
+            <span class="tl-tag">グランドオープン</span>
+            <span class="tl-tag">振り返り</span>
+            <span class="tl-tag">集客分析</span>
+          </div>
+        </div>
+        <div class="tl-arrow">→</div>
+      </a>
+
+      <a class="tl-card c-orange" href="https://warm-paletas-32cb0b.netlify.app/" target="_blank">
+        <div class="tl-month">
+          <div class="tl-month-num">04</div>
+          <div class="tl-month-label">APRIL</div>
+        </div>
+        <div class="tl-body">
+          <div class="tl-title">4月 振り返りレポート</div>
+          <div class="tl-desc">売上1,600万円・集客1,400人・リピーター2倍超。グランドOPEN後第2月目の転換点。</div>
+          <div class="tl-tags">
+            <span class="tl-tag">売上 ¥16M</span>
+            <span class="tl-tag">集客1,400人</span>
+            <span class="tl-tag">集客動線</span>
+          </div>
+        </div>
+        <div class="tl-arrow">→</div>
+      </a>
+
+      <a class="tl-card c-blue" href="https://fantastic-beignet-3eb1ab.netlify.app/" target="_blank">
+        <div class="tl-month">
+          <div class="tl-month-num">05</div>
+          <div class="tl-month-label">MAY</div>
+        </div>
+        <div class="tl-body">
+          <div class="tl-title">5月 振り返りレポート</div>
+          <div class="tl-desc">売上1,600万円・総客数1,886人・新規451人。損益計算書・日次データ・来店内訳を完全収録。</div>
+          <div class="tl-tags">
+            <span class="tl-tag">損益計算書</span>
+            <span class="tl-tag">日次データ全日</span>
+            <span class="tl-tag">来店内訳</span>
+          </div>
+        </div>
+        <div class="tl-arrow">→</div>
+      </a>
+
+      <a class="tl-card c-purple" href="https://spiffy-pithivier-93e9c0.netlify.app/" target="_blank">
+        <div class="tl-month">
+          <div class="tl-month-num">06</div>
+          <div class="tl-month-label">JUNE</div>
+        </div>
+        <div class="tl-body">
+          <div class="tl-title">6月 フリークエルレポート</div>
+          <div class="tl-desc">売上1,677万円・総客数1,812人・客単価+10%・全国売上ランキング3位。7月2,000万円達成への戦略付き。</div>
+          <div class="tl-tags">
+            <span class="tl-tag">全国3位</span>
+            <span class="tl-tag">ダッシュボード</span>
+            <span class="tl-tag">7月戦略</span>
+          </div>
+        </div>
+        <div class="tl-arrow">→</div>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- MTG MINUTES -->
+  <div class="sec" id="minutes">
+    <div class="sec-head">
+      <span class="sec-num">02</span>
+      <span class="sec-title">Meeting Minutes — 定例社員MTG</span>
+      <div class="sec-line"></div>
+      <span class="sec-count">1 DOCS</span>
+    </div>
+    <div class="timeline">
+
+      <a class="tl-card c-green" href="https://repoker-minutes-20260702.netlify.app/" target="_blank">
+        <div class="tl-month">
+          <div class="tl-month-num">07</div>
+          <div class="tl-month-label">2026.07.02</div>
+        </div>
+        <div class="tl-body">
+          <div class="tl-title">定例ミーティング 議事録</div>
+          <div class="tl-desc">アクション18件・6月実績レビュー・7月トーナメント変更・夏プロモ・イベント計画・新社員2名就任</div>
+          <div class="tl-tags">
+            <span class="tl-tag">タスク18件</span>
+            <span class="tl-tag">7月目標¥20M</span>
+            <span class="tl-tag">新社員就任</span>
+            <span class="tl-tag">イベント計画</span>
+          </div>
+        </div>
+        <div class="tl-arrow">→</div>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- ANALYTICS -->
+  <div class="sec" id="analytics">
+    <div class="sec-head">
+      <span class="sec-num">03</span>
+      <span class="sec-title">Analytics — データ・分析</span>
+      <div class="sec-line"></div>
+      <span class="sec-count">2 DOCS</span>
+    </div>
+    <div class="a-grid">
+
+      <a class="a-card c-gold" href="https://entity513.github.io/repoker-ops-log/" target="_blank">
+        <span class="a-card-icon">♠</span>
+        <div class="a-card-title">競合店舗 稼働ログ</div>
+        <div class="a-card-desc">Re:Poker / ATLAS / Las Vegas / Poker Spot White の4店舗リング・トーナメント稼働データ比較。2026.03.01〜04.08</div>
+        <div class="a-card-tags">
+          <span class="tl-tag">4店舗比較</span>
+          <span class="tl-tag">リングログ</span>
+          <span class="tl-tag">トナメログ</span>
+        </div>
+        <span class="a-card-arr">→</span>
+      </a>
+
+      <a class="a-card c-blue" href="https://entity513.github.io/repoker-x-automation/" target="_blank">
+        <span class="a-card-icon">🤖</span>
+        <div class="a-card-title">X自動化 報告書</div>
+        <div class="a-card-desc">OpenClaw Entityによる X（Twitter）自動化システムの導入・運用報告。投稿実績・エンゲージメント分析。</div>
+        <div class="a-card-tags">
+          <span class="tl-tag">X運用</span>
+          <span class="tl-tag">自動化</span>
+          <span class="tl-tag">Entity</span>
+        </div>
+        <span class="a-card-arr">→</span>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- STRATEGY -->
+  <div class="sec" id="strategy">
+    <div class="sec-head">
+      <span class="sec-num">04</span>
+      <span class="sec-title">Strategy — 戦略・マニュアル</span>
+      <div class="sec-line"></div>
+      <span class="sec-count">4 DOCS</span>
+    </div>
+    <div class="m-grid">
+
+      <a class="m-card" href="https://stellar-crumble-b58b85.netlify.app/" target="_blank">
+        <span class="m-icon">🎯</span>
+        <div class="m-body">
+          <div class="m-title">マーケティング戦略</div>
+          <div class="m-cat">STRATEGY</div>
+        </div>
+        <span class="m-badge">DOC</span>
+      </a>
+
+      <a class="m-card" href="https://jocular-strudel-733a53.netlify.app/" target="_blank">
+        <span class="m-icon">𝕏</span>
+        <div class="m-body">
+          <div class="m-title">公式X 運用マニュアル</div>
+          <div class="m-cat">SNS / X</div>
+        </div>
+        <span class="m-badge">DOC</span>
+      </a>
+
+      <a class="m-card" href="https://jovial-swan-1fe19b.netlify.app/" target="_blank">
+        <span class="m-icon">👑</span>
+        <div class="m-body">
+          <div class="m-title">りい個人X 運用マニュアル</div>
+          <div class="m-cat">SNS / X</div>
+        </div>
+        <span class="m-badge">DOC</span>
+      </a>
+
+      <a class="m-card" href="https://luminous-gingersnap-b74726.netlify.app/" target="_blank">
+        <span class="m-icon">🆕</span>
+        <div class="m-body">
+          <div class="m-title">新コンセプト マニュアル</div>
+          <div class="m-cat">BRAND</div>
+        </div>
+        <span class="m-badge">DOC</span>
+      </a>
+
+      <a class="m-card" href="https://chimerical-cactus-86c194.netlify.app/" target="_blank">
+        <span class="m-icon">📖</span>
+        <div class="m-body">
+          <div class="m-title">新キャスト バイブル</div>
+          <div class="m-cat">HR / TRAINING</div>
+        </div>
+        <span class="m-badge">DOC</span>
+      </a>
+
+      <a class="m-card" href="https://repoker-point-ranking-entity.netlify.app/" target="_blank">
+        <span class="m-icon">🏆</span>
+        <div class="m-body">
+          <div class="m-title">ポイントランキング 競合比較</div>
+          <div class="m-cat">ANALYTICS</div>
+        </div>
+        <span class="m-badge">DOC</span>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- ORG -->
+  <div class="sec" id="org">
+    <div class="sec-head">
+      <span class="sec-num">05</span>
+      <span class="sec-title">Organization — 組織・人事</span>
+      <div class="sec-line"></div>
+      <span class="sec-count">3 DOCS</span>
+    </div>
+    <div class="m-grid">
+
+      <a class="m-card" href="https://zesty-truffle-40ff31.netlify.app/" target="_blank">
+        <span class="m-icon">🗺️</span>
+        <div class="m-body">
+          <div class="m-title">大阪戦域作戦図 組織再編成</div>
+          <div class="m-cat">ORG CHART / 2026.06</div>
+        </div>
+        <span class="m-badge org">ORG</span>
+      </a>
+
+      <a class="m-card" href="https://curious-chebakia-925dbc.netlify.app/" target="_blank">
+        <span class="m-icon">🌏</span>
+        <div class="m-body">
+          <div class="m-title">ヨンフン 就任ブリーフィング</div>
+          <div class="m-cat">HR / INBOUND</div>
+        </div>
+        <span class="m-badge org">ORG</span>
+      </a>
+
+      <a class="m-card" href="https://tiny-starlight-fd1786.netlify.app/" target="_blank">
+        <span class="m-icon">🏗️</span>
+        <div class="m-body">
+          <div class="m-title">どれみ 立ち上げブリーフィング</div>
+          <div class="m-cat">HR / Re:Poker LIVE</div>
+        </div>
+        <span class="m-badge org">ORG</span>
+      </a>
+
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <div class="footer-logo">Re:Poker DATABASE</div>
+  ♠ ENTITY INTELLIGENCE SYSTEM — INTERNAL USE ONLY ♠<br>
+  <span style="opacity:.5">2026</span>
+</div>
+
+</body>
+</html>
